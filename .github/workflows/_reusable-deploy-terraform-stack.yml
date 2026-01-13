@@ -166,15 +166,15 @@ jobs:
             -var="github_pat=${{ secrets.gh_pat }}" \
             -var="cloudflare_tunnel_token=${{ secrets.cloudflare_tunnel_token }}" \
             -var="pg_pass=${{ secrets.db_password }}" \
-            -var="pg_user=${{ vars.PG_USER }}" \
-            -var="pg_db=${{ vars.PG_DB }}" \
+            -var="pg_user=${{ vars.PG_USER || 'authentik' }}" \
+            -var="pg_db=${{ vars.PG_DB || 'authentik' }}" \
             -var="authentik_secret_key=${{ secrets.authentik_secret_key }}" \
             -var="authentik_bootstrap_password=${{ secrets.authentik_bootstrap_password }}" \
-            -var="authentik_image=${{ vars.AUTHENTIK_IMAGE }}" \
-            -var="authentik_tag=${{ vars.AUTHENTIK_TAG }}" \
-            -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP }}" \
-            -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS }}" \
-            -var="data_path=${{ vars.DATA_PATH }}"
+            -var="authentik_image=${{ vars.AUTHENTIK_IMAGE || '' }}" \
+            -var="authentik_tag=${{ vars.AUTHENTIK_TAG || '' }}" \
+            -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP || '9000' }}" \
+            -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS || '9443' }}" \
+            -var="data_path=${{ vars.DATA_PATH || '/data' }}"
 
       - name: Terraform Apply
         working-directory: terraform
@@ -198,14 +198,12 @@ jobs:
             -var="github_pat=${{ secrets.gh_pat }}" \
             -var="cloudflare_tunnel_token=${{ secrets.cloudflare_tunnel_token }}" \
             -var="pg_pass=${{ secrets.db_password }}" \
-            -var="pg_user=${{ vars.PG_USER }}" \
-            -var="pg_db=${{ vars.PG_DB }}" \
+            -var="pg_user=${{ vars.PG_USER || 'authentik' }}" \
+            -var="pg_db=${{ vars.PG_DB || 'authentik' }}" \
             -var="authentik_secret_key=${{ secrets.authentik_secret_key }}" \
             -var="authentik_bootstrap_password=${{ secrets.authentik_bootstrap_password }}" \
-            -var="authentik_image=${{ vars.AUTHENTIK_IMAGE }}" \
-            -var="authentik_tag=${{ vars.AUTHENTIK_TAG }}" \
-            -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP }}" \
-            -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS }}" \
-            -var="data_path=${{ vars.DATA_PATH }}"
-
-      # No Nextcloud configuration steps for Authentik deployment
+            -var="authentik_image=${{ vars.AUTHENTIK_IMAGE || '' }}" \
+            -var="authentik_tag=${{ vars.AUTHENTIK_TAG || '' }}" \
+            -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP || '9000' }}" \
+            -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS || '9443' }}" \
+            -var="data_path=${{ vars.DATA_PATH || '/data' }}"
