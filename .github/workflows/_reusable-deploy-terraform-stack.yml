@@ -129,18 +129,31 @@ jobs:
 
       - name: Prepare host directories on Docker host
         run: |
-          echo "Creating data directories on Docker host if they don't exist..."
+          echo "Creating data directories on Docker host with correct permissions..."
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ inputs.ssh_user }}@${{ inputs.docker_host_ip }} '
             BASE_PATH="/data/${{ inputs.stack_name }}"
-            for dir in db media certs templates; do
-              if [ ! -d "$BASE_PATH/$dir" ]; then
-                echo "Creating $BASE_PATH/$dir..."
-                mkdir -p "$BASE_PATH/$dir"
-                chmod 755 "$BASE_PATH/$dir"
-              else
-                echo "Directory $BASE_PATH/$dir already exists, skipping..."
-              fi
-            done
+            
+            # Create base directory
+            sudo mkdir -p "$BASE_PATH"
+            
+            # Create and set permissions for each directory
+            # PostgreSQL (alpine postgres user UID 70)
+            sudo mkdir -p "$BASE_PATH/db"
+            sudo chown -R 70:70 "$BASE_PATH/db"
+            sudo chmod 700 "$BASE_PATH/db"
+            
+            # Authentik media/templates (authentik user UID 1000)
+            sudo mkdir -p "$BASE_PATH/media" "$BASE_PATH/templates"
+            sudo chown -R 1000:1000 "$BASE_PATH/media" "$BASE_PATH/templates"
+            sudo chmod 755 "$BASE_PATH/media" "$BASE_PATH/templates"
+            
+            # Certs (worker runs as root)
+            sudo mkdir -p "$BASE_PATH/certs"
+            sudo chown -R 0:0 "$BASE_PATH/certs"
+            sudo chmod 755 "$BASE_PATH/certs"
+            
+            echo "Directory structure:"
+            ls -lan "$BASE_PATH"
           '
 
 
