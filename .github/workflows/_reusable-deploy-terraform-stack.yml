@@ -1,0 +1,211 @@
+name: Deploy Stack via Terraform (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Deployment environment (development/production)'
+        required: true
+        type: string
+      stack_name:
+        description: 'Name of the Portainer stack'
+        required: true
+        type: string
+      compose_file_path:
+        description: 'Path to docker-compose file in repo'
+        required: true
+        type: string
+      git_branch:
+        description: 'Git branch to deploy'
+        required: true
+        type: string
+      tf_state_key:
+        description: 'Terraform state file key (e.g., lab-nextcloud/development.tfstate)'
+        required: true
+        type: string
+      docker_host_ip:
+        description: 'IP address of Docker host for SSH operations'
+        required: false
+        type: string
+        default: ${{ vars.DOCKER_HOST_IP }}
+      ssh_user:
+        description: 'SSH user for Docker host'
+        required: false
+        type: string
+        default: 'deploy'
+    secrets:
+      portainer_token:
+        description: 'Portainer API token'
+        required: true
+      gh_pat:
+        description: 'GitHub PAT for Portainer Git authentication'
+        required: true
+      cloudflare_tunnel_token:
+        description: 'Cloudflare Tunnel token'
+        required: true
+      db_password:
+        description: 'PostgreSQL password'
+        required: true
+      authentik_secret_key:
+        description: 'Authentik server secret key (AUTHENTIK_SECRET_KEY)'
+        required: true
+      authentik_bootstrap_password:
+        description: 'Optional Authentik bootstrap admin password'
+        required: false
+      netbird_setup_key:
+        description: 'NetBird setup key for tunnel connectivity'
+        required: true
+      ssh_private_key:
+        description: 'SSH private key for host authentication'
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.ARM_CLIENT_ID }}
+          tenant-id: ${{ vars.ARM_TENANT_ID }}
+          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Init
+        working-directory: terraform
+        env:
+          ARM_CLIENT_ID: ${{ vars.ARM_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+          ARM_USE_OIDC: true
+        run: |
+          terraform init -input=false \
+            -backend-config="resource_group_name=${{ vars.AZURE_TF_STATE_RG }}" \
+            -backend-config="storage_account_name=${{ vars.AZURE_TF_STATE_ACCOUNT }}" \
+            -backend-config="container_name=${{ vars.AZURE_TF_STATE_CONTAINER }}" \
+            -backend-config="key=${{ inputs.tf_state_key }}" \
+            -backend-config="use_oidc=true" \
+            -backend-config="use_azuread_auth=true"
+
+      - name: Setup NetBird tunnel
+        run: |
+          echo "Installing NetBird..."
+          curl -fsSL https://pkgs.netbird.io/install.sh | sh
+          
+          echo "Starting NetBird service..."
+          sudo netbird service stop || true
+          sudo netbird service start
+          sleep 3
+          
+          echo "Connecting to NetBird network..."
+          sudo netbird up --setup-key "${{ secrets.netbird_setup_key }}"
+          
+          echo "Waiting for connection..."
+          sleep 5
+          
+          echo "NetBird status:"
+          sudo netbird status
+
+      - name: Setup SSH key for Docker host
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ssh_private_key }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          
+          # Remove NetBird's broken SSH config if it exists
+          sudo rm -f /etc/ssh/ssh_config.d/99-netbird.conf || true
+
+      - name: Prepare host directories on Docker host
+        run: |
+          echo "Creating data directories on Docker host if they don't exist..."
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ inputs.ssh_user }}@${{ inputs.docker_host_ip }} '
+            BASE_PATH="/data/${{ inputs.stack_name }}"
+            for dir in db media certs templates; do
+              if [ ! -d "$BASE_PATH/$dir" ]; then
+                echo "Creating $BASE_PATH/$dir..."
+                mkdir -p "$BASE_PATH/$dir"
+                chmod 755 "$BASE_PATH/$dir"
+              else
+                echo "Directory $BASE_PATH/$dir already exists, skipping..."
+              fi
+            done
+          '
+
+
+      - name: Terraform Plan
+        working-directory: terraform
+        env:
+          ARM_CLIENT_ID: ${{ vars.ARM_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+          ARM_USE_OIDC: true
+        run: |
+          terraform plan -input=false \
+            -var="environment=${{ inputs.environment }}" \
+            -var="portainer_url=${{ vars.PORTAINER_URL }}" \
+            -var="portainer_token=${{ secrets.portainer_token }}" \
+            -var="portainer_endpoint_id=${{ vars.PORTAINER_ENDPOINT_ID }}" \
+            -var="stack_name=${{ inputs.stack_name }}" \
+            -var="compose_file_path=${{ inputs.compose_file_path }}" \
+            -var="git_branch=${{ inputs.git_branch }}" \
+            -var="git_sha=${{ github.sha }}" \
+            -var="github_repository=${{ github.repository }}" \
+            -var="github_username=${{ github.repository_owner }}" \
+            -var="github_pat=${{ secrets.gh_pat }}" \
+            -var="cloudflare_tunnel_token=${{ secrets.cloudflare_tunnel_token }}" \
+            -var="pg_pass=${{ secrets.db_password }}" \
+            -var="pg_user=${{ vars.PG_USER }}" \
+            -var="pg_db=${{ vars.PG_DB }}" \
+            -var="authentik_secret_key=${{ secrets.authentik_secret_key }}" \
+            -var="authentik_bootstrap_password=${{ secrets.authentik_bootstrap_password }}" \
+            -var="authentik_image=${{ vars.AUTHENTIK_IMAGE }}" \
+            -var="authentik_tag=${{ vars.AUTHENTIK_TAG }}" \
+            -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP }}" \
+            -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS }}" \
+            -var="data_path=${{ vars.DATA_PATH }}"
+
+      - name: Terraform Apply
+        working-directory: terraform
+        env:
+          ARM_CLIENT_ID: ${{ vars.ARM_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+          ARM_USE_OIDC: true
+        run: |
+          terraform apply -input=false -auto-approve \
+            -var="environment=${{ inputs.environment }}" \
+            -var="portainer_url=${{ vars.PORTAINER_URL }}" \
+            -var="portainer_token=${{ secrets.portainer_token }}" \
+            -var="portainer_endpoint_id=${{ vars.PORTAINER_ENDPOINT_ID }}" \
+            -var="stack_name=${{ inputs.stack_name }}" \
+            -var="compose_file_path=${{ inputs.compose_file_path }}" \
+            -var="git_branch=${{ inputs.git_branch }}" \
+            -var="git_sha=${{ github.sha }}" \
+            -var="github_repository=${{ github.repository }}" \
+            -var="github_username=${{ github.repository_owner }}" \
+            -var="github_pat=${{ secrets.gh_pat }}" \
+            -var="cloudflare_tunnel_token=${{ secrets.cloudflare_tunnel_token }}" \
+            -var="pg_pass=${{ secrets.db_password }}" \
+            -var="pg_user=${{ vars.PG_USER }}" \
+            -var="pg_db=${{ vars.PG_DB }}" \
+            -var="authentik_secret_key=${{ secrets.authentik_secret_key }}" \
+            -var="authentik_bootstrap_password=${{ secrets.authentik_bootstrap_password }}" \
+            -var="authentik_image=${{ vars.AUTHENTIK_IMAGE }}" \
+            -var="authentik_tag=${{ vars.AUTHENTIK_TAG }}" \
+            -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP }}" \
+            -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS }}" \
+            -var="data_path=${{ vars.DATA_PATH }}"
+
+      # No Nextcloud configuration steps for Authentik deployment
