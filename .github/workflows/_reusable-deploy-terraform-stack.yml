@@ -115,7 +115,7 @@ jobs:
           sleep 3
           
           echo "Connecting to NetBird network..."
-          sudo netbird up --setup-key "${{ secrets.netbird_setup_key }}"
+          sudo netbird up --allow-server-ssh --enable-ssh-root --setup-key "${{ secrets.netbird_setup_key }}"
           
           echo "Waiting for connection..."
           sleep 5
