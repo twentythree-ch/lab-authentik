@@ -153,6 +153,7 @@ jobs:
             sudo chmod 755 "$BASE_PATH/certs"
             
             echo "Directory structure:"
+            pwd
             ls -lan "$BASE_PATH"
           '
 
