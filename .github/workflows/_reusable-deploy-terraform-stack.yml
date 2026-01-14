@@ -33,6 +33,11 @@ on:
         required: false
         type: string
         default: 'deploy'
+      base_data_path:
+        description: 'Base data path on Docker host'
+        required: false
+        type: string
+        default: '/data'
     secrets:
       portainer_token:
         description: 'Portainer API token'
@@ -131,7 +136,7 @@ jobs:
         run: |
           echo "Creating data directories on Docker host with correct permissions..."
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ inputs.ssh_user }}@${{ inputs.docker_host_ip }} '
-            BASE_PATH="/data/${{ inputs.stack_name }}"
+            BASE_PATH="${{inputs.base_data_path }}/${{ inputs.stack_name }}"
             
             # Create base directory
             sudo mkdir -p "$BASE_PATH"
@@ -188,7 +193,7 @@ jobs:
             -var="authentik_tag=${{ vars.AUTHENTIK_TAG || '' }}" \
             -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP || '9000' }}" \
             -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS || '9443' }}" \
-            -var="data_path=${{ vars.DATA_PATH || '/data' }}"
+            -var="data_path=${{inputs.base_data_path }}/${{ inputs.stack_name }}"
 
       - name: Terraform Apply
         working-directory: terraform
@@ -220,4 +225,4 @@ jobs:
             -var="authentik_tag=${{ vars.AUTHENTIK_TAG || '' }}" \
             -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP || '9000' }}" \
             -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS || '9443' }}" \
-            -var="data_path=${{ vars.DATA_PATH || '/data' }}"
+            -var="data_path=${{inputs.base_data_path }}/${{ inputs.stack_name }}"
