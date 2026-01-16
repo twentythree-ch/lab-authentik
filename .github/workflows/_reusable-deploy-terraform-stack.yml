@@ -123,6 +123,18 @@ jobs:
           echo "NetBird status:"
           sudo netbird status
 
+      - name: Debug pause (5 min)
+        if: ${{ always() && runner.debug == '1' }}
+        run: |
+          echo "Debug mode enabled. Sleeping for 5 minutes to allow manual inspection..."
+          echo "NetBird status:"
+          sudo netbird status
+          echo "Runner IP:"
+          curl -s ifconfig.me || true
+          echo ""
+          echo "Sleeping 300 seconds..."
+          sleep 300
+
       - name: Setup SSH key for Docker host
         run: |
           mkdir -p ~/.ssh
