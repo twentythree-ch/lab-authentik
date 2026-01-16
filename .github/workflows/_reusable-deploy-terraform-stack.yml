@@ -176,6 +176,20 @@ jobs:
             ls -lan "$BASE_PATH"
           '
 
+      - name: Test Portainer API connectivity
+        run: |
+          echo "Testing Portainer API connectivity via NetBird..."
+          PORTAINER_URL="${{ vars.PORTAINER_URL }}"
+          echo "Portainer URL: $PORTAINER_URL"
+          
+          # Test HTTPS with skip verify
+          echo "Testing HTTPS connection..."
+          curl -vk --connect-timeout 10 "$PORTAINER_URL/api/status" || true
+          
+          # If HTTPS fails, try HTTP on port 9000
+          HTTP_URL=$(echo "$PORTAINER_URL" | sed 's|https://|http://|' | sed 's|:9443|:9000|')
+          echo "Testing HTTP fallback: $HTTP_URL"
+          curl -v --connect-timeout 10 "$HTTP_URL/api/status" || true
 
       - name: Terraform Plan
         working-directory: terraform
