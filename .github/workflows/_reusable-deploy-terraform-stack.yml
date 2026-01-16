@@ -130,6 +130,7 @@ jobs:
           echo "Runner IP:"
           curl -s ifconfig.me || true
           echo ""
+          ping -c 10 ${{ inputs.docker_host_ip }} || true
 
           if (${runner.debug} == '1') then
           {
