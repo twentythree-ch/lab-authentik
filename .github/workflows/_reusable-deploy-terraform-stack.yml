@@ -207,7 +207,7 @@ jobs:
             -var="authentik_tag=${{ vars.AUTHENTIK_TAG || '' }}" \
             -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP || '9000' }}" \
             -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS || '9443' }}" \
-            -var="data_path=${{inputs.base_data_path }}/${{ inputs.stack_name }}"
+            -var="data_path=${{inputs.base_data_path }}"
 
       - name: Terraform Apply
         working-directory: terraform
@@ -239,4 +239,4 @@ jobs:
             -var="authentik_tag=${{ vars.AUTHENTIK_TAG || '' }}" \
             -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP || '9000' }}" \
             -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS || '9443' }}" \
-            -var="data_path=${{inputs.base_data_path }}/${{ inputs.stack_name }}"
+            -var="data_path=${{inputs.base_data_path }}"
