@@ -130,13 +130,12 @@ jobs:
           echo "Runner IP:"
           curl -s ifconfig.me || true
           echo ""
-          ping -c 10 ${{ inputs.docker_host_ip }} || true
+          ping -c 5 ${{ inputs.docker_host_ip }} || true
 
-          if (${runner.debug} == '1') then
-          {
+          if [ "${{ runner.debug }}" = "1" ]; then
             echo "Debug mode enabled. Sleeping for 5 minutes to allow manual inspection..."
             sleep 300
-          }
+          fi
 
       - name: Setup SSH key for Docker host
         run: |
