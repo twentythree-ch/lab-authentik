@@ -214,6 +214,24 @@ jobs:
           else
             echo "Stack '$STACK_NAME' does not exist yet"
           fi
+          
+          # Test POST request to stack creation endpoint (dry run)
+          echo "=== Testing POST to stack creation endpoint ==="
+          echo "This mimics what Terraform does..."
+          curl -v -sk \
+            -H "X-API-Key: $TOKEN" \
+            -H "Content-Type: application/json" \
+            -X POST \
+            "$PORTAINER_URL/api/stacks/create/standalone/repository?endpointId=$ENDPOINT_ID" \
+            -d '{
+              "name": "test-curl-delete-me",
+              "repositoryURL": "https://github.com/${{ github.repository }}",
+              "repositoryReferenceName": "refs/heads/${{ inputs.git_branch }}",
+              "composeFile": "${{ inputs.compose_file_path }}",
+              "repositoryAuthentication": true,
+              "repositoryUsername": "${{ github.repository_owner }}",
+              "repositoryPassword": "${{ secrets.gh_pat }}"
+            }' 2>&1 || true
 
       - name: Terraform Plan
         working-directory: terraform
