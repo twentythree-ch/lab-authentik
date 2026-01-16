@@ -90,16 +90,6 @@ resource "portainer_stack" "app" {
   }
 
   env {
-    name  = "COMPOSE_PORT_HTTP"
-    value = var.compose_port_http
-  }
-
-  env {
-    name  = "COMPOSE_PORT_HTTPS"
-    value = var.compose_port_https
-  }
-
-  env {
     name  = "DATA_PATH"
     value = "${var.data_path}/${var.stack_name}"
   }

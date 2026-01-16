@@ -100,18 +100,6 @@ variable "authentik_tag" {
   default     = ""
 }
 
-variable "compose_port_http" {
-  description = "Host port for HTTP mapping (COMPOSE_PORT_HTTP)"
-  type        = string
-  default     = "9000"
-}
-
-variable "compose_port_https" {
-  description = "Host port for HTTPS mapping (COMPOSE_PORT_HTTPS)"
-  type        = string
-  default     = "9443"
-}
-
 variable "data_path" {
   description = "Host data base path (maps to DATA_PATH)"
   type        = string

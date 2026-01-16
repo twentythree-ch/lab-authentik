@@ -204,8 +204,6 @@ jobs:
             -var="authentik_bootstrap_password=${{ secrets.authentik_bootstrap_password }}" \
             -var="authentik_image=${{ vars.AUTHENTIK_IMAGE || '' }}" \
             -var="authentik_tag=${{ vars.AUTHENTIK_TAG || '' }}" \
-            -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP || '9000' }}" \
-            -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS || '9443' }}" \
             -var="data_path=${{inputs.base_data_path }}"
 
       - name: Terraform Apply
@@ -236,6 +234,4 @@ jobs:
             -var="authentik_bootstrap_password=${{ secrets.authentik_bootstrap_password }}" \
             -var="authentik_image=${{ vars.AUTHENTIK_IMAGE || '' }}" \
             -var="authentik_tag=${{ vars.AUTHENTIK_TAG || '' }}" \
-            -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP || '9000' }}" \
-            -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS || '9443' }}" \
             -var="data_path=${{inputs.base_data_path }}"
