@@ -123,7 +123,7 @@ jobs:
           echo "NetBird status:"
           sudo netbird status
 
-      - name: Debug output and pause if required (5 min)
+      - name: Verify connection and pause if required (5 min)
         run: |
           echo "NetBird status:"
           sudo netbird status
@@ -175,63 +175,6 @@ jobs:
             pwd
             ls -lan "$BASE_PATH"
           '
-
-      - name: Test Portainer API connectivity
-        run: |
-          echo "Testing Portainer API connectivity via NetBird..."
-          PORTAINER_URL="${{ vars.PORTAINER_URL }}"
-          TOKEN="${{ secrets.portainer_token }}"
-          ENDPOINT_ID="${{ vars.PORTAINER_ENDPOINT_ID }}"
-          STACK_NAME="${{ inputs.stack_name }}"
-          
-          echo "Portainer URL: $PORTAINER_URL"
-          echo "Endpoint ID: $ENDPOINT_ID"
-          echo "Stack Name: $STACK_NAME"
-          
-          # Test API status
-          echo "=== API Status ==="
-          curl -sk "$PORTAINER_URL/api/status" | jq . || true
-          
-          # List all endpoints
-          echo "=== Available Endpoints ==="
-          curl -sk -H "X-API-Key: $TOKEN" "$PORTAINER_URL/api/endpoints" | jq '.[] | {Id, Name, Type, Status}' || true
-          
-          # Check specific endpoint
-          echo "=== Endpoint $ENDPOINT_ID Details ==="
-          curl -sk -H "X-API-Key: $TOKEN" "$PORTAINER_URL/api/endpoints/$ENDPOINT_ID" | jq '{Id, Name, Type, Status, URL}' || true
-          
-          # List existing stacks
-          echo "=== Existing Stacks ==="
-          curl -sk -H "X-API-Key: $TOKEN" "$PORTAINER_URL/api/stacks" | jq '.[] | {Id, Name, EndpointId, Status}' || true
-          
-          # Check if our stack already exists
-          echo "=== Checking for stack: $STACK_NAME ==="
-          EXISTING=$(curl -sk -H "X-API-Key: $TOKEN" "$PORTAINER_URL/api/stacks" | jq -r ".[] | select(.Name == \"$STACK_NAME\") | .Id")
-          if [ -n "$EXISTING" ]; then
-            echo "Stack '$STACK_NAME' already exists with ID: $EXISTING"
-            echo "Stack details:"
-            curl -sk -H "X-API-Key: $TOKEN" "$PORTAINER_URL/api/stacks/$EXISTING" | jq . || true
-          else
-            echo "Stack '$STACK_NAME' does not exist yet"
-          fi
-          
-          # Test POST request to stack creation endpoint (dry run)
-          echo "=== Testing POST to stack creation endpoint ==="
-          echo "This mimics what Terraform does..."
-          curl -v -sk \
-            -H "X-API-Key: $TOKEN" \
-            -H "Content-Type: application/json" \
-            -X POST \
-            "$PORTAINER_URL/api/stacks/create/standalone/repository?endpointId=$ENDPOINT_ID" \
-            -d '{
-              "name": "test-curl-delete-me",
-              "repositoryURL": "https://github.com/${{ github.repository }}",
-              "repositoryReferenceName": "refs/heads/${{ inputs.git_branch }}",
-              "composeFile": "${{ inputs.compose_file_path }}",
-              "repositoryAuthentication": true,
-              "repositoryUsername": "${{ github.repository_owner }}",
-              "repositoryPassword": "${{ secrets.gh_pat }}"
-            }' 2>&1 || true
 
       - name: Terraform Plan
         working-directory: terraform
