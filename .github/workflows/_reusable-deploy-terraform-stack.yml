@@ -33,6 +33,11 @@ on:
         required: false
         type: string
         default: 'deploy'
+      base_data_path:
+        description: 'Base data path on Docker host'
+        required: false
+        type: string
+        default: '/data'
     secrets:
       portainer_token:
         description: 'Portainer API token'
@@ -110,13 +115,27 @@ jobs:
           sleep 3
           
           echo "Connecting to NetBird network..."
-          sudo netbird up --setup-key "${{ secrets.netbird_setup_key }}"
+          sudo netbird up --allow-server-ssh --enable-ssh-root --setup-key "${{ secrets.netbird_setup_key }}"
           
           echo "Waiting for connection..."
           sleep 5
           
           echo "NetBird status:"
           sudo netbird status
+
+      - name: Verify connection and pause if required (5 min)
+        run: |
+          echo "NetBird status:"
+          sudo netbird status
+          echo "Runner IP:"
+          curl -s ifconfig.me || true
+          echo ""
+          ping -c 5 ${{ inputs.docker_host_ip }} || true
+
+          if [ "${{ runner.debug }}" = "1" ]; then
+            echo "Debug mode enabled. Sleeping for 5 minutes to allow manual inspection..."
+            sleep 300
+          fi
 
       - name: Setup SSH key for Docker host
         run: |
@@ -129,20 +148,33 @@ jobs:
 
       - name: Prepare host directories on Docker host
         run: |
-          echo "Creating data directories on Docker host if they don't exist..."
+          echo "Creating data directories on Docker host with correct permissions..."
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ inputs.ssh_user }}@${{ inputs.docker_host_ip }} '
-            BASE_PATH="/data/${{ inputs.stack_name }}"
-            for dir in db media certs templates; do
-              if [ ! -d "$BASE_PATH/$dir" ]; then
-                echo "Creating $BASE_PATH/$dir..."
-                mkdir -p "$BASE_PATH/$dir"
-                chmod 755 "$BASE_PATH/$dir"
-              else
-                echo "Directory $BASE_PATH/$dir already exists, skipping..."
-              fi
-            done
+            BASE_PATH="${{inputs.base_data_path }}/${{ inputs.stack_name }}"
+            
+            # Create base directory
+            sudo mkdir -p "$BASE_PATH"
+            
+            # Create and set permissions for each directory
+            # PostgreSQL (alpine postgres user UID 70)
+            sudo mkdir -p "$BASE_PATH/db"
+            sudo chown -R 70:70 "$BASE_PATH/db"
+            sudo chmod 700 "$BASE_PATH/db"
+            
+            # Authentik media/templates (authentik user UID 1000)
+            sudo mkdir -p "$BASE_PATH/media" "$BASE_PATH/templates"
+            sudo chown -R 1000:1000 "$BASE_PATH/media" "$BASE_PATH/templates"
+            sudo chmod 755 "$BASE_PATH/media" "$BASE_PATH/templates"
+            
+            # Certs (worker runs as root)
+            sudo mkdir -p "$BASE_PATH/certs"
+            sudo chown -R 0:0 "$BASE_PATH/certs"
+            sudo chmod 755 "$BASE_PATH/certs"
+            
+            echo "Directory structure:"
+            pwd
+            ls -lan "$BASE_PATH"
           '
-
 
       - name: Terraform Plan
         working-directory: terraform
@@ -166,15 +198,15 @@ jobs:
             -var="github_pat=${{ secrets.gh_pat }}" \
             -var="cloudflare_tunnel_token=${{ secrets.cloudflare_tunnel_token }}" \
             -var="pg_pass=${{ secrets.db_password }}" \
-            -var="pg_user=${{ vars.PG_USER }}" \
-            -var="pg_db=${{ vars.PG_DB }}" \
+            -var="pg_user=${{ vars.PG_USER || 'authentik' }}" \
+            -var="pg_db=${{ vars.PG_DB || 'authentik' }}" \
             -var="authentik_secret_key=${{ secrets.authentik_secret_key }}" \
             -var="authentik_bootstrap_password=${{ secrets.authentik_bootstrap_password }}" \
-            -var="authentik_image=${{ vars.AUTHENTIK_IMAGE }}" \
-            -var="authentik_tag=${{ vars.AUTHENTIK_TAG }}" \
-            -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP }}" \
-            -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS }}" \
-            -var="data_path=${{ vars.DATA_PATH }}"
+            -var="authentik_image=${{ vars.AUTHENTIK_IMAGE || '' }}" \
+            -var="authentik_tag=${{ vars.AUTHENTIK_TAG || '' }}" \
+            -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP || '9000' }}" \
+            -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS || '9443' }}" \
+            -var="data_path=${{inputs.base_data_path }}"
 
       - name: Terraform Apply
         working-directory: terraform
@@ -198,14 +230,12 @@ jobs:
             -var="github_pat=${{ secrets.gh_pat }}" \
             -var="cloudflare_tunnel_token=${{ secrets.cloudflare_tunnel_token }}" \
             -var="pg_pass=${{ secrets.db_password }}" \
-            -var="pg_user=${{ vars.PG_USER }}" \
-            -var="pg_db=${{ vars.PG_DB }}" \
+            -var="pg_user=${{ vars.PG_USER || 'authentik' }}" \
+            -var="pg_db=${{ vars.PG_DB || 'authentik' }}" \
             -var="authentik_secret_key=${{ secrets.authentik_secret_key }}" \
             -var="authentik_bootstrap_password=${{ secrets.authentik_bootstrap_password }}" \
-            -var="authentik_image=${{ vars.AUTHENTIK_IMAGE }}" \
-            -var="authentik_tag=${{ vars.AUTHENTIK_TAG }}" \
-            -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP }}" \
-            -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS }}" \
-            -var="data_path=${{ vars.DATA_PATH }}"
-
-      # No Nextcloud configuration steps for Authentik deployment
+            -var="authentik_image=${{ vars.AUTHENTIK_IMAGE || '' }}" \
+            -var="authentik_tag=${{ vars.AUTHENTIK_TAG || '' }}" \
+            -var="compose_port_http=${{ vars.COMPOSE_PORT_HTTP || '9000' }}" \
+            -var="compose_port_https=${{ vars.COMPOSE_PORT_HTTPS || '9443' }}" \
+            -var="data_path=${{inputs.base_data_path }}"
