@@ -32,9 +32,7 @@ services:
       AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?secret key required}
       AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD}
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.10.3}
-    ports:
-    - ${COMPOSE_PORT_HTTP:-9000}:9000
-    - ${COMPOSE_PORT_HTTPS:-9443}:9443
+    # No host port bindings needed - accessed via Cloudflare Tunnel
     restart: unless-stopped
     volumes:
     - media:/media
@@ -104,4 +102,5 @@ volumes:
 
 networks:
   internal:
-    name: authentik
+    # Internal network - no external access needed
+    # Each stack gets its own isolated network
