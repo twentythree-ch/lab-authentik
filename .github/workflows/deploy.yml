@@ -80,6 +80,7 @@ jobs:
       ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
       authentik_secret_key: ${{ secrets.AUTHENTIK_SECRET_KEY }}
       authentik_bootstrap_password: ${{ secrets.AUTHENTIK_BOOTSTRAP_PASSWORD }}
+      email_host_password: ${{ secrets.EMAIL_HOST_PASSWORD }}
 
   deploy-production:
     needs: [determine-environment, deploy-development]
@@ -105,3 +106,4 @@ jobs:
       ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
       authentik_secret_key: ${{ secrets.AUTHENTIK_SECRET_KEY }}
       authentik_bootstrap_password: ${{ secrets.AUTHENTIK_BOOTSTRAP_PASSWORD }}
+      email_host_password: ${{ secrets.EMAIL_HOST_PASSWORD }}
