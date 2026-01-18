@@ -38,6 +38,37 @@ on:
         required: false
         type: string
         default: '/data'
+      # SMTP / Email settings (use repository Variables for non-sensitive values)
+      email_host:
+        description: 'SMTP host for outgoing mail'
+        required: false
+        type: string
+        default: ${{ vars.EMAIL_HOST || '' }}
+      email_port:
+        description: 'SMTP port for outgoing mail'
+        required: false
+        type: string
+        default: ${{ vars.EMAIL_PORT || '' }}
+      email_host_user:
+        description: 'SMTP username for outgoing mail'
+        required: false
+        type: string
+        default: ${{ vars.EMAIL_HOST_USER || '' }}
+      email_use_tls:
+        description: 'Whether to use STARTTLS for SMTP (true/false)'
+        required: false
+        type: string
+        default: ${{ vars.EMAIL_USE_TLS || 'false' }}
+      email_use_ssl:
+        description: 'Whether to use SSL for SMTP (true/false)'
+        required: false
+        type: string
+        default: ${{ vars.EMAIL_USE_SSL || 'false' }}
+      default_from_email:
+        description: 'Default FROM email address'
+        required: false
+        type: string
+        default: ${{ vars.DEFAULT_FROM_EMAIL || 'auth@twentythree.ch' }}
     secrets:
       portainer_token:
         description: 'Portainer API token'
@@ -62,6 +93,9 @@ on:
         required: true
       ssh_private_key:
         description: 'SSH private key for host authentication'
+        required: true
+      email_host_password:
+        description: 'SMTP host password (used for outgoing mail)'
         required: true
 
 jobs:
@@ -198,6 +232,13 @@ jobs:
             -var="github_pat=${{ secrets.gh_pat }}" \
             -var="cloudflare_tunnel_token=${{ secrets.cloudflare_tunnel_token }}" \
             -var="pg_pass=${{ secrets.db_password }}" \
+              -var="email_host=${{ inputs.email_host }}" \
+              -var="email_port=${{ inputs.email_port }}" \
+              -var="email_host_user=${{ inputs.email_host_user }}" \
+              -var="email_host_password=${{ secrets.email_host_password }}" \
+              -var="email_use_tls=${{ inputs.email_use_tls }}" \
+              -var="email_use_ssl=${{ inputs.email_use_ssl }}" \
+              -var="default_from_email=${{ inputs.default_from_email }}" \
             -var="pg_user=${{ vars.PG_USER || 'authentik' }}" \
             -var="pg_db=${{ vars.PG_DB || 'authentik' }}" \
             -var="authentik_secret_key=${{ secrets.authentik_secret_key }}" \
@@ -228,6 +269,13 @@ jobs:
             -var="github_pat=${{ secrets.gh_pat }}" \
             -var="cloudflare_tunnel_token=${{ secrets.cloudflare_tunnel_token }}" \
             -var="pg_pass=${{ secrets.db_password }}" \
+              -var="email_host=${{ inputs.email_host }}" \
+              -var="email_port=${{ inputs.email_port }}" \
+              -var="email_host_user=${{ inputs.email_host_user }}" \
+              -var="email_host_password=${{ secrets.email_host_password }}" \
+              -var="email_use_tls=${{ inputs.email_use_tls }}" \
+              -var="email_use_ssl=${{ inputs.email_use_ssl }}" \
+              -var="default_from_email=${{ inputs.default_from_email }}" \
             -var="pg_user=${{ vars.PG_USER || 'authentik' }}" \
             -var="pg_db=${{ vars.PG_DB || 'authentik' }}" \
             -var="authentik_secret_key=${{ secrets.authentik_secret_key }}" \

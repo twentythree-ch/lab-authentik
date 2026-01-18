@@ -111,3 +111,46 @@ variable "git_sha" {
   type        = string
   default     = ""
 }
+
+variable "email_host" {
+  description = "SMTP host for outgoing mail (maps to EMAIL_HOST)"
+  type        = string
+  default     = ""
+}
+
+variable "email_port" {
+  description = "SMTP port for outgoing mail (maps to EMAIL_PORT)"
+  type        = string
+  default     = ""
+}
+
+variable "email_host_user" {
+  description = "SMTP username (maps to EMAIL_HOST_USER)"
+  type        = string
+  default     = ""
+}
+
+variable "email_host_password" {
+  description = "SMTP password (maps to EMAIL_HOST_PASSWORD)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "email_use_tls" {
+  description = "Whether to use STARTTLS for SMTP (maps to EMAIL_USE_TLS)"
+  type        = bool
+  default     = false
+}
+
+variable "email_use_ssl" {
+  description = "Whether to use SSL for SMTP (maps to EMAIL_USE_SSL)"
+  type        = bool
+  default     = false
+}
+
+variable "default_from_email" {
+  description = "Default FROM email address (maps to DEFAULT_FROM_EMAIL)"
+  type        = string
+  default     = "authentik@example.local"
+}

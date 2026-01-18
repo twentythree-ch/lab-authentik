@@ -31,6 +31,23 @@ services:
       AUTHENTIK_POSTGRESQL__USER: ${PG_USER:-authentik}
       AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?secret key required}
       AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD}
+      # SMTP / Email configuration (set via Portainer environment variables)
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-"false"}
+      EMAIL_USE_SSL: ${EMAIL_USE_SSL:-"false"}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-"auth@twentythree.ch"}
+
+      # Authentik-specific mapping (keeps config consistent with nested settings)
+      AUTHENTIK_EMAIL__HOST: ${EMAIL_HOST:-}
+      AUTHENTIK_EMAIL__PORT: ${EMAIL_PORT:-}
+      AUTHENTIK_EMAIL__HOST_USER: ${EMAIL_HOST_USER:-}
+      AUTHENTIK_EMAIL__HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      AUTHENTIK_EMAIL__USE_TLS: ${EMAIL_USE_TLS:-"false"}
+      AUTHENTIK_EMAIL__USE_SSL: ${EMAIL_USE_SSL:-"false"}
+      AUTHENTIK_EMAIL__DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-"auth@twentythree.ch"}
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.10.3}
     # No host port bindings needed - accessed via Cloudflare Tunnel
     restart: unless-stopped
@@ -52,6 +69,23 @@ services:
       AUTHENTIK_POSTGRESQL__USER: ${PG_USER:-authentik}
       AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?secret key required}
       AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD}
+      # SMTP / Email configuration (set via Portainer environment variables)
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-"false"}
+      EMAIL_USE_SSL: ${EMAIL_USE_SSL:-"false"}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-"auth@twentythree.ch"}
+
+      # Authentik-specific mapping (keeps config consistent with nested settings)
+      AUTHENTIK_EMAIL__HOST: ${EMAIL_HOST:-}
+      AUTHENTIK_EMAIL__PORT: ${EMAIL_PORT:-}
+      AUTHENTIK_EMAIL__HOST_USER: ${EMAIL_HOST_USER:-}
+      AUTHENTIK_EMAIL__HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      AUTHENTIK_EMAIL__USE_TLS: ${EMAIL_USE_TLS:-"false"}
+      AUTHENTIK_EMAIL__USE_SSL: ${EMAIL_USE_SSL:-"false"}
+      AUTHENTIK_EMAIL__DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-"auth@twentythree.ch"}
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.10.3}
     restart: unless-stopped
     user: root
