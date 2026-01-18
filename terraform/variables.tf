@@ -154,3 +154,9 @@ variable "default_from_email" {
   type        = string
   default     = "authentik@example.local"
 }
+
+variable "email_timeout" {
+  description = "SMTP timeout in seconds (maps to EMAIL_TIMEOUT / AUTHENTIK_EMAIL__TIMEOUT)"
+  type        = number
+  default     = 10
+}

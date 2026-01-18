@@ -130,6 +130,11 @@ resource "portainer_stack" "app" {
     value = var.default_from_email
   }
 
+  env {
+    name  = "EMAIL_TIMEOUT"
+    value = tostring(var.email_timeout)
+  }
+
   # Authentik nested-setting equivalents
   env {
     name  = "AUTHENTIK_EMAIL__HOST"
@@ -142,12 +147,12 @@ resource "portainer_stack" "app" {
   }
 
   env {
-    name  = "AUTHENTIK_EMAIL__HOST_USER"
+    name  = "AUTHENTIK_EMAIL__USERNAME"
     value = var.email_host_user
   }
 
   env {
-    name  = "AUTHENTIK_EMAIL__HOST_PASSWORD"
+    name  = "AUTHENTIK_EMAIL__PASSWORD"
     value = var.email_host_password
   }
 
@@ -162,7 +167,12 @@ resource "portainer_stack" "app" {
   }
 
   env {
-    name  = "AUTHENTIK_EMAIL__DEFAULT_FROM_EMAIL"
+    name  = "AUTHENTIK_EMAIL__TIMEOUT"
+    value = tostring(var.email_timeout)
+  }
+
+  env {
+    name  = "AUTHENTIK_EMAIL__FROM"
     value = var.default_from_email
   }
 

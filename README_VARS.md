@@ -2,61 +2,68 @@
 
 This file documents the GitHub Actions Variables, Secrets, Terraform variables, and container environment variables required to deploy the Authentik stack via the reusable workflow (`.github/workflows/_reusable-deploy-terraform-stack.yml`).
 
-**Where to set**:
+Where to set
 - GitHub repository Settings → Actions → Variables (non-sensitive values)
 - GitHub repository Settings → Actions → Secrets → Variables (sensitive values)
 - Terraform variables can also be provided during `terraform apply` via `-var` flags or in your CI environment.
 
-## GitHub Actions Variables (recommended)
+Recommended GitHub Actions Variables (non-sensitive)
 - `EMAIL_HOST` — SMTP host (e.g. `smtp.example.com`)
 - `EMAIL_PORT` — SMTP port (e.g. `587`)
 - `EMAIL_HOST_USER` — SMTP username (e.g. `auth@example.com`)
 - `EMAIL_USE_TLS` — `true` or `false` (STARTTLS)
 - `EMAIL_USE_SSL` — `true` or `false` (SSL/TLS)
+- `EMAIL_TIMEOUT` — SMTP timeout in seconds (default `10`)
 - `DEFAULT_FROM_EMAIL` — Default From address (e.g. `Authentik <auth@example.com>`)
 
-Set these in the repository as Actions Variables so the reusable workflow can read them as inputs.
-
-## GitHub Actions Secrets (required)
+Required GitHub Actions Secret
 - `EMAIL_HOST_PASSWORD` — SMTP password (sensitive)
 
-Also keep existing secrets already used by the workflow:
-- `portainer_token` (Portainer API key)
-- `gh_pat` (GitHub PAT for Portainer repository auth)
-- `cloudflare_tunnel_token` (Cloudflare Tunnel token)
-- `db_password` (Postgres password)
-- `authentik_secret_key` (AUTHENTIK_SECRET_KEY)
-- `authentik_bootstrap_password` (optional)
-- `netbird_setup_key`, `ssh_private_key` (per workflow requirements)
+Also keep existing secrets required by the workflow:
+- `PORTAINER_TOKEN`, `GH_PAT`, `CLOUDFLARE_TUNNEL_TOKEN`, `DB_PASSWORD`, `AUTHENTIK_SECRET_KEY`, `AUTHENTIK_BOOTSTRAP_PASSWORD`, `NETBIRD_SETUP_KEY`, `SSH_PRIVATE_KEY`.
 
-## Terraform variables (defined in `terraform/variables.tf`)
-These are the Terraform variable names exposed by the module and passed from the workflow:
-- `email_host` (maps to `EMAIL_HOST`)
-- `email_port` (maps to `EMAIL_PORT`)
-- `email_host_user` (maps to `EMAIL_HOST_USER`)
-- `email_host_password` (sensitive — maps to `EMAIL_HOST_PASSWORD`)
-- `email_use_tls` (`true|false`)
-- `email_use_ssl` (`true|false`)
-- `default_from_email`
+Terraform variables (in `terraform/variables.tf`)
+- `email_host` → maps from `EMAIL_HOST`
+- `email_port` → maps from `EMAIL_PORT`
+- `email_host_user` → maps from `EMAIL_HOST_USER`
+- `email_host_password` (sensitive) → maps from `EMAIL_HOST_PASSWORD`
+- `email_use_tls` → maps from `EMAIL_USE_TLS`
+- `email_use_ssl` → maps from `EMAIL_USE_SSL`
+- `email_timeout` → maps from `EMAIL_TIMEOUT` (number, default 10)
+- `default_from_email` → maps from `DEFAULT_FROM_EMAIL`
 
-Other Terraform variables already in use (for reference):
-- `cloudflare_tunnel_token`, `pg_pass`, `pg_user`, `pg_db`, `authentik_secret_key`, `authentik_bootstrap_password`, `authentik_image`, `authentik_tag`, `data_path`, `git_sha`, etc.
+Container environment variables (set in `docker/docker-compose.yml` via the Portainer stack)
+These are provided to the `server` and `worker` services and include the documented Authentik keys:
+- `AUTHENTIK_EMAIL__HOST`
+- `AUTHENTIK_EMAIL__PORT`
+- `AUTHENTIK_EMAIL__USERNAME`
+- `AUTHENTIK_EMAIL__PASSWORD`
+- `AUTHENTIK_EMAIL__USE_TLS`
+- `AUTHENTIK_EMAIL__USE_SSL`
+- `AUTHENTIK_EMAIL__TIMEOUT`
+- `AUTHENTIK_EMAIL__FROM`
 
-## Container environment variables (inside `docker/docker-compose.yml`)
-The stack will be provided the following env vars (server and worker):
-- `EMAIL_HOST`
-- `EMAIL_PORT`
-- `EMAIL_HOST_USER`
-- `EMAIL_HOST_PASSWORD` (sensitive)
-- `EMAIL_USE_TLS`
-- `EMAIL_USE_SSL`
-- `DEFAULT_FROM_EMAIL`
+The stack also receives intermediate `EMAIL_*` environment variables from Terraform/CI which are mapped to the `AUTHENTIK_EMAIL__*` keys inside the compose file.
 
-Additionally, the compose exposes Authentik nested-setting equivalents so the app reads them directly:
-- `AUTHENTIK_EMAIL__HOST`, `AUTHENTIK_EMAIL__PORT`, `AUTHENTIK_EMAIL__HOST_USER`, `AUTHENTIK_EMAIL__HOST_PASSWORD`, `AUTHENTIK_EMAIL__USE_TLS`, `AUTHENTIK_EMAIL__USE_SSL`, `AUTHENTIK_EMAIL__DEFAULT_FROM_EMAIL`
+Example `.env` snippet (as recommended in the Authentik docs):
 
-## Example: adding values via the workflow call
-When invoking the reusable workflow or running the Terraform commands locally, the workflow passes these values to Terraform; an example `terraform apply` snippet the workflow uses is:
+```env
+# SMTP Host Emails are sent to
+AUTHENTIK_EMAIL__HOST=localhost
+AUTHENTIK_EMAIL__PORT=25
+# Optionally authenticate (don't add quotation marks to your password)
+AUTHENTIK_EMAIL__USERNAME=
+AUTHENTIK_EMAIL__PASSWORD=
+# Use StartTLS
+AUTHENTIK_EMAIL__USE_TLS=false
+# Use SSL
+AUTHENTIK_EMAIL__USE_SSL=false
+AUTHENTIK_EMAIL__TIMEOUT=10
+# Email address authentik will send from, should have a correct @domain
+AUTHENTIK_EMAIL__FROM=authentik@localhost
+```
+
+Example `terraform apply` (CI passes values via workflow; local example):
 
 ```bash
 terraform apply -var="email_host=smtp.example.com" \
@@ -65,18 +72,15 @@ terraform apply -var="email_host=smtp.example.com" \
   -var="email_host_password=SUPERSECRET" \
   -var="email_use_tls=true" \
   -var="email_use_ssl=false" \
+  -var="email_timeout=10" \
   -var="default_from_email='Authentik <auth@example.com>'" \
   ...other-vars...
 ```
 
-In CI (recommended):
-- Add non-sensitive values as Actions Variables.
-- Add `EMAIL_HOST_PASSWORD` as an Actions Secret and ensure the reusable workflow has `secrets.email_host_password` configured (done in the workflow).
-
-## Quick checklist
-- [ ] Add Variables: `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_USE_TLS`, `EMAIL_USE_SSL`, `DEFAULT_FROM_EMAIL` (Actions → Variables)
+Quick checklist
+- [ ] Add Variables: `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_USE_TLS`, `EMAIL_USE_SSL`, `EMAIL_TIMEOUT`, `DEFAULT_FROM_EMAIL` (Actions → Variables)
 - [ ] Add Secret: `EMAIL_HOST_PASSWORD` (Actions → Secrets)
-- [ ] Ensure existing required secrets are present (`portainer_token`, `db_password`, `authentik_secret_key`, etc.)
+- [ ] Ensure other required secrets are present (`PORTAINER_TOKEN`, `DB_PASSWORD`, etc.)
 - [ ] Trigger the deployment workflow (or run `terraform apply`) to propagate envs into the Portainer stack.
 
-If you'd like, I can add this README to the repo (done), or create a small checklist PR that updates `.github/CONTRIBUTING.md` with these steps.
+If you want, I can open a small PR that adds example (non-sensitive) variables to the repo or update `.github/CONTRIBUTING.md` with these steps.

@@ -43,11 +43,12 @@ services:
       # Authentik-specific mapping (keeps config consistent with nested settings)
       AUTHENTIK_EMAIL__HOST: ${EMAIL_HOST:-}
       AUTHENTIK_EMAIL__PORT: ${EMAIL_PORT:-}
-      AUTHENTIK_EMAIL__HOST_USER: ${EMAIL_HOST_USER:-}
-      AUTHENTIK_EMAIL__HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      AUTHENTIK_EMAIL__USERNAME: ${EMAIL_HOST_USER:-}
+      AUTHENTIK_EMAIL__PASSWORD: ${EMAIL_HOST_PASSWORD:-}
       AUTHENTIK_EMAIL__USE_TLS: ${EMAIL_USE_TLS:-"false"}
       AUTHENTIK_EMAIL__USE_SSL: ${EMAIL_USE_SSL:-"false"}
-      AUTHENTIK_EMAIL__DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-"auth@twentythree.ch"}
+      AUTHENTIK_EMAIL__TIMEOUT: ${EMAIL_TIMEOUT:-10}
+      AUTHENTIK_EMAIL__FROM: ${DEFAULT_FROM_EMAIL:-"authentik@localhost"}
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.10.3}
     # No host port bindings needed - accessed via Cloudflare Tunnel
     restart: unless-stopped
@@ -81,11 +82,12 @@ services:
       # Authentik-specific mapping (keeps config consistent with nested settings)
       AUTHENTIK_EMAIL__HOST: ${EMAIL_HOST:-}
       AUTHENTIK_EMAIL__PORT: ${EMAIL_PORT:-}
-      AUTHENTIK_EMAIL__HOST_USER: ${EMAIL_HOST_USER:-}
-      AUTHENTIK_EMAIL__HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      AUTHENTIK_EMAIL__USERNAME: ${EMAIL_HOST_USER:-}
+      AUTHENTIK_EMAIL__PASSWORD: ${EMAIL_HOST_PASSWORD:-}
       AUTHENTIK_EMAIL__USE_TLS: ${EMAIL_USE_TLS:-"false"}
       AUTHENTIK_EMAIL__USE_SSL: ${EMAIL_USE_SSL:-"false"}
-      AUTHENTIK_EMAIL__DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-"auth@twentythree.ch"}
+      AUTHENTIK_EMAIL__TIMEOUT: ${EMAIL_TIMEOUT:-10}
+      AUTHENTIK_EMAIL__FROM: ${DEFAULT_FROM_EMAIL:-"authentik@localhost"}
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.10.3}
     restart: unless-stopped
     user: root
