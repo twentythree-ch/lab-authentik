@@ -232,13 +232,13 @@ jobs:
             -var="github_pat=${{ secrets.gh_pat }}" \
             -var="cloudflare_tunnel_token=${{ secrets.cloudflare_tunnel_token }}" \
             -var="pg_pass=${{ secrets.db_password }}" \
-              -var="email_host=${{ inputs.email_host }}" \
-              -var="email_port=${{ inputs.email_port }}" \
-              -var="email_host_user=${{ inputs.email_host_user }}" \
-              -var="email_host_password=${{ secrets.email_host_password }}" \
-              -var="email_use_tls=${{ inputs.email_use_tls }}" \
-              -var="email_use_ssl=${{ inputs.email_use_ssl }}" \
-              -var="default_from_email=${{ inputs.default_from_email }}" \
+            -var="email_host=${{ inputs.email_host }}" \
+            -var="email_port=${{ inputs.email_port }}" \
+            -var="email_host_user=${{ inputs.email_host_user || vars.EMAIL_HOST_USER }}" \
+            -var="email_host_password=${{ secrets.email_host_password }}" \
+            -var="email_use_tls=${{ inputs.email_use_tls }}" \
+            -var="email_use_ssl=${{ inputs.email_use_ssl }}" \
+            -var="default_from_email=${{ inputs.default_from_email || vars.DEFAULT_FROM_EMAIL }}" \
             -var="pg_user=${{ vars.PG_USER || 'authentik' }}" \
             -var="pg_db=${{ vars.PG_DB || 'authentik' }}" \
             -var="authentik_secret_key=${{ secrets.authentik_secret_key }}" \
@@ -269,13 +269,13 @@ jobs:
             -var="github_pat=${{ secrets.gh_pat }}" \
             -var="cloudflare_tunnel_token=${{ secrets.cloudflare_tunnel_token }}" \
             -var="pg_pass=${{ secrets.db_password }}" \
-              -var="email_host=${{ inputs.email_host }}" \
-              -var="email_port=${{ inputs.email_port }}" \
-              -var="email_host_user=${{ inputs.email_host_user }}" \
-              -var="email_host_password=${{ secrets.email_host_password }}" \
-              -var="email_use_tls=${{ inputs.email_use_tls }}" \
-              -var="email_use_ssl=${{ inputs.email_use_ssl }}" \
-              -var="default_from_email=${{ inputs.default_from_email }}" \
+            -var="email_host=${{ inputs.email_host }}" \
+            -var="email_port=${{ inputs.email_port }}" \
+            -var="email_host_user=${{ inputs.email_host_user || vars.EMAIL_HOST_USER }}" \
+            -var="email_host_password=${{ secrets.email_host_password }}" \
+            -var="email_use_tls=${{ inputs.email_use_tls }}" \
+            -var="email_use_ssl=${{ inputs.email_use_ssl }}" \
+            -var="default_from_email=${{ inputs.default_from_email || vars.DEFAULT_FROM_EMAIL }}" \
             -var="pg_user=${{ vars.PG_USER || 'authentik' }}" \
             -var="pg_db=${{ vars.PG_DB || 'authentik' }}" \
             -var="authentik_secret_key=${{ secrets.authentik_secret_key }}" \
