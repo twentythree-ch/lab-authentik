@@ -63,7 +63,7 @@ services:
     networks:
       - internal
       
- cloudflared:
+  cloudflared:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
     command: tunnel --no-autoupdate run
