@@ -58,13 +58,13 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    command: tunnel --no-autoupdate run
     networks:
       - internal
-    environment:
-      - TUNNEL_TRANSPORT_PROTOCOL=http2
     env_file:
       - /run/infisical/authentik-development.env
+    environment:
+      - TUNNEL_TRANSPORT_PROTOCOL=http2
     depends_on:
       - server
 
