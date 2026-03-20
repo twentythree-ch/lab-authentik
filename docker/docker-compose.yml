@@ -1,7 +1,7 @@
 services:
   postgresql:
     env_file:
-      - ${DATA_PATH}/stack.env
+      - ${HOST_DATA_PATH}/stack.env
     healthcheck:
       interval: 30s
       retries: 5
@@ -23,7 +23,7 @@ services:
       postgresql:
         condition: service_healthy
     env_file:
-      - ${DATA_PATH}/stack.env
+      - ${HOST_DATA_PATH}/stack.env
     environment:
       # Hardcoded service discovery — not secrets
       AUTHENTIK_POSTGRESQL__HOST: postgresql
@@ -41,7 +41,7 @@ services:
       postgresql:
         condition: service_healthy
     env_file:
-      - ${DATA_PATH}/stack.env
+      - ${HOST_DATA_PATH}/stack.env
     environment:
       AUTHENTIK_POSTGRESQL__HOST: postgresql
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.10.3}
