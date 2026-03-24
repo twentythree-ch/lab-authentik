@@ -94,6 +94,88 @@ resource "portainer_stack" "app" {
     value = "${var.data_path}/${var.stack_name}"
   }
 
+  # SMTP / Email environment variables (passed through to the stack)
+  env {
+    name  = "EMAIL_HOST"
+    value = var.email_host
+  }
+
+  env {
+    name  = "EMAIL_PORT"
+    value = var.email_port
+  }
+
+  env {
+    name  = "EMAIL_HOST_USER"
+    value = var.email_host_user
+  }
+
+  env {
+    name  = "EMAIL_HOST_PASSWORD"
+    value = var.email_host_password
+  }
+
+  env {
+    name  = "EMAIL_USE_TLS"
+    value = var.email_use_tls ? "true" : "false"
+  }
+
+  env {
+    name  = "EMAIL_USE_SSL"
+    value = var.email_use_ssl ? "true" : "false"
+  }
+
+  env {
+    name  = "DEFAULT_FROM_EMAIL"
+    value = var.default_from_email
+  }
+
+  env {
+    name  = "EMAIL_TIMEOUT"
+    value = tostring(var.email_timeout)
+  }
+
+  # Authentik nested-setting equivalents
+  env {
+    name  = "AUTHENTIK_EMAIL__HOST"
+    value = var.email_host
+  }
+
+  env {
+    name  = "AUTHENTIK_EMAIL__PORT"
+    value = var.email_port
+  }
+
+  env {
+    name  = "AUTHENTIK_EMAIL__USERNAME"
+    value = var.email_host_user
+  }
+
+  env {
+    name  = "AUTHENTIK_EMAIL__PASSWORD"
+    value = var.email_host_password
+  }
+
+  env {
+    name  = "AUTHENTIK_EMAIL__USE_TLS"
+    value = var.email_use_tls ? "true" : "false"
+  }
+
+  env {
+    name  = "AUTHENTIK_EMAIL__USE_SSL"
+    value = var.email_use_ssl ? "true" : "false"
+  }
+
+  env {
+    name  = "AUTHENTIK_EMAIL__TIMEOUT"
+    value = tostring(var.email_timeout)
+  }
+
+  env {
+    name  = "AUTHENTIK_EMAIL__FROM"
+    value = var.default_from_email
+  }
+
   # Force update when git commit changes
   depends_on = [null_resource.git_change_trigger]
 }
