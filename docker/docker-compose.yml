@@ -1,7 +1,7 @@
 services:
   postgresql:
     env_file:
-      - /run/infisical/authentik-development.env
+      - ${STACK_ENV_FILE}
     healthcheck:
       interval: 30s
       retries: 5
@@ -23,7 +23,7 @@ services:
       postgresql:
         condition: service_healthy
     env_file:
-      - /run/infisical/authentik-development.env
+      - ${STACK_ENV_FILE}
     environment:
       # Hardcoded service discovery — not secrets
       AUTHENTIK_POSTGRESQL__HOST: postgresql
@@ -41,7 +41,7 @@ services:
       postgresql:
         condition: service_healthy
     env_file:
-      - /run/infisical/authentik-development.env
+      - ${STACK_ENV_FILE}
     environment:
       AUTHENTIK_POSTGRESQL__HOST: postgresql
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.10.3}
@@ -62,7 +62,7 @@ services:
     networks:
       - internal
     env_file:
-      - /run/infisical/authentik-development.env
+      - ${STACK_ENV_FILE}
     environment:
       - TUNNEL_TRANSPORT_PROTOCOL=http2
     depends_on:
